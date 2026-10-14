@@ -1,2 +1,2 @@
-# Progetto_visione-_NRR
+# Progetto_visione_NRR
 Progetto Visione  e percezione
