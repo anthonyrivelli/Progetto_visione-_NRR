@@ -1,5 +1,6 @@
 import cv2
 from ultralytics import YOLO
+import numpy as np
 
 class ObjectDetector:
     def __init__(self, model_path, conf_threshold):
@@ -56,16 +57,26 @@ class ObjectDetector:
 
             # Classi di test (es. COCO: 0=persona, 1=bici, 2=auto, 3=moto, 5=bus, 7=camion)
             #detections = self.detect(frame, target_classes=[0, 1, 2, 3, 5, 7])
+
+            # Generiamo una lista di 100 colori casuali (formato BGR)
+            # Impostiamo il seed per avere sempre gli stessi colori ad ogni avvio
+            np.random.seed(100) 
+            colors = np.random.randint(0, 255, size=(100, 3), dtype="uint8").tolist()
             
             for det in detections:
                 x1, y1, x2, y2 = det["bbox"]
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2) # (colore BGR)
+                class_id = int(det['class_id'])
+                # Selezioniamo il colore basandoci sul class_id. 
+                # Usiamo il modulo (%) per evitare errori se i class_id superano i 100
+                color = tuple(colors[class_id % len(colors)])
+                # Disegniamo il rettangolo con il colore della classe
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                 
                 # Mostriamo l'ID insieme a classe e confidenza
                 id_text = f"ID:{det['track_id']} " if det['track_id'] is not None else ""
                 label = f"{id_text}Cls:{det['class_id']} Conf:{det['confidence']:.2f}"
                 
-                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
             cv2.imshow("Detection & Tracking in tempo reale", frame)
             
