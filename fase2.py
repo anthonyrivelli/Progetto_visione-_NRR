@@ -44,6 +44,11 @@ class ObjectDetector:
         if not cap.isOpened():
             raise ValueError("Impossibile aprire il flusso video")
 
+        # Generiamo una lista di 100 colori casuali (formato BGR)
+        # Impostiamo il seed per avere sempre gli stessi colori ad ogni avvio
+        np.random.seed(100) 
+        colors = np.random.randint(0, 255, size=(100, 3), dtype="uint8").tolist()
+
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
@@ -56,12 +61,7 @@ class ObjectDetector:
 
 
             # Classi di test (es. COCO: 0=persona, 1=bici, 2=auto, 3=moto, 5=bus, 7=camion)
-            #detections = self.detect(frame, target_classes=[0, 1, 2, 3, 5, 7])
-
-            # Generiamo una lista di 100 colori casuali (formato BGR)
-            # Impostiamo il seed per avere sempre gli stessi colori ad ogni avvio
-            np.random.seed(100) 
-            colors = np.random.randint(0, 255, size=(100, 3), dtype="uint8").tolist()
+            # detections = self.detect(frame, target_classes=[0, 1, 2, 3, 5, 7])
             
             for det in detections:
                 x1, y1, x2, y2 = det["bbox"]
