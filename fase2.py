@@ -9,7 +9,7 @@ class ObjectDetector:
     def detect(self, frame, target_classes=None):
         # 1. Usiamo .track() al posto della semplice chiamata al modello
         # 2. Aggiungiamo persist=True per mantenere la memoria degli ID tra un frame e l'altro
-        results = self.model.track(frame, conf=self.conf_threshold, persist=True, verbose=False, tracker="bytetrack.yaml", device="gpu")[0] #cuda per usare GPU, cpu per usare cpu
+        results = self.model.track(frame, conf=self.conf_threshold, persist=True, verbose=False, tracker="bytetrack.yaml", device="cpu")[0] #cuda per usare GPU, cpu per usare cpu
         detections = []
 
         # Controlliamo se ci sono box e se il tracker ha assegnato degli ID
@@ -78,7 +78,7 @@ class ObjectDetector:
 
 if __name__ == "__main__":
     detector = ObjectDetector(model_path="yolo26n.pt", conf_threshold=0.50)
-    detector.process_video_stream("video/video_traffico_2.mp4")
+    detector.process_video_stream("video/video_traffico.mp4")
 
 # VESIONE NATIVA DI ULTRALYTICS YOLO
 # from ultralytics import YOLO
