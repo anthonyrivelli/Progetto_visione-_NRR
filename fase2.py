@@ -9,7 +9,7 @@ class ObjectDetector:
     def detect(self, frame, target_classes=None):
         # 1. Usiamo .track() al posto della semplice chiamata al modello
         # 2. Aggiungiamo persist=True per mantenere la memoria degli ID tra un frame e l'altro
-        results = self.model.track(frame, conf=self.conf_threshold, persist=True, verbose=False)[0]
+        results = self.model.track(frame, conf=self.conf_threshold, persist=True, verbose=False, tracker="bytetrack.yaml", device="gpu")[0] #cuda per usare GPU, cpu per usare cpu
         detections = []
 
         # Controlliamo se ci sono box e se il tracker ha assegnato degli ID
@@ -41,39 +41,44 @@ class ObjectDetector:
         cap = cv2.VideoCapture(video_path)
         
         if not cap.isOpened():
-            raise ValueError("Impossibile aprire il flusso video.")
+            raise ValueError("Impossibile aprire il flusso video")
 
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
 
-            # Classi di test (es. COCO: 0=persona, 2=auto, 3=moto, 5=bus, 7=camion)
-            detections = self.detect(frame, target_classes=[0, 1, 2, 3, 5, 7])
+
+            # Genera la lista di tutti gli ID direttamente dalle classi del modello
+            all_classes = list(self.model.names.keys())  # Genera [0, 1, 2, 3, ..., 79] 
+            detections = self.detect(frame, target_classes=all_classes)
+
+
+            # Classi di test (es. COCO: 0=persona, 1=bici, 2=auto, 3=moto, 5=bus, 7=camion)
+            #detections = self.detect(frame, target_classes=[0, 1, 2, 3, 5, 7])
             
             for det in detections:
                 x1, y1, x2, y2 = det["bbox"]
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2) # (colore BGR)
                 
                 # Mostriamo l'ID insieme a classe e confidenza
                 id_text = f"ID:{det['track_id']} " if det['track_id'] is not None else ""
                 label = f"{id_text}Cls:{det['class_id']} Conf:{det['confidence']:.2f}"
                 
-                cv2.putText(frame, label, (x1, y1 - 10), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
             cv2.imshow("Detection & Tracking in tempo reale", frame)
             
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q') or key == ord('Q'):
                 break
-               
+            
         cap.release()
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    # N.B. Ho ipotizzato yolo11n.pt o yolov8n.pt (yolo26n credo fosse un typo)
-    detector = ObjectDetector(model_path="yolov8n.pt", conf_threshold=0.50)
-    detector.process_video_stream("video/video_traffico.mp4")
+    detector = ObjectDetector(model_path="yolo26n.pt", conf_threshold=0.50)
+    detector.process_video_stream("video/video_traffico_2.mp4")
 
 # VESIONE NATIVA DI ULTRALYTICS YOLO
 # from ultralytics import YOLO
