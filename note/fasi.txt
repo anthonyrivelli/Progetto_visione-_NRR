@@ -1,9 +1,12 @@
 FASE 1: rilevamento e classificazione oggetti, senza memoria.
 estrazione delle informazioni ricevute dal modello YOLO 
 coordinate della box: formato corner-based (xyxy) (esiste anche center-based(xywh))
-- Object Detection tramite YOLO, OpenCV
+-> Object Detection tramite YOLO, OpenCV
 * CAMBIARE LABEL COCO
-* colore per ogni classe riconosciuta
+- colore per ogni classe riconosciuta [fatto]
 FASE 2: tracciamento temporale, prende gli oggetti rilevati e li collega nel tempo, inserimemto id persistente
-- utilizzato bytetrack
-* cambiare codice perchè è illegile
+-> utilizzato bytetrack
+- cambiare codice perchè è illegile [fatto]
+
+FASE 3: CONTEGGIO OGGETTI 
+

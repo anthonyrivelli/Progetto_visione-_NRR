@@ -73,15 +73,17 @@ class ObjectDetector:
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                 
                 # Mostriamo l'ID insieme a classe e confidenza
-                id_text = f"ID:{det['track_id']} " if det['track_id'] is not None else ""
-                label = f"{id_text}Cls:{det['class_id']} Conf:{det['confidence']:.2f}"
+                if det['track_id'] is not None:
+                    label = f"ID:{det['track_id']} Cls:{det['class_id']} Conf:{det['confidence']:.2f}"
+                else:
+                    label = f"Cls:{det['class_id']} Conf:{det['confidence']:.2f}"
                 
                 cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
             cv2.imshow("Detection & Tracking in tempo reale", frame)
             
             key = cv2.waitKey(1) & 0xFF
-            if key == ord('q') or key == ord('Q'):
+            if key == ord('q') or key == ord('Q') or key == 27:
                 break
             
         cap.release()
