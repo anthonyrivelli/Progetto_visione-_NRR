@@ -43,11 +43,10 @@ class ObjectDetector:
         self.soglia_parziale = 0.2     
         self.soglia_occluso = 0.3      
         self.max_distanza = 1.0        
-        self.max_diff_colore = 0.5     
+        self.max_diff_colore = 0.5 # 0->identici, 1->diversi     
         self.soglia_doppione = 0.7     
 
     def detect(self, frame, target_classes=None):
-        # SPassiamo target_classes direttamente a YOLO 
         results = self.model.track(
             frame, 
             conf=self.conf_threshold, 
@@ -69,7 +68,7 @@ class ObjectDetector:
                     "confidence": float(box.conf[0]),
                     "class_id": int(box.cls[0]),
                     "track_id": track_id,
-                    "hist": calcola_istogramma(frame, bbox) # Calcolato una volta sola
+                    "hist": calcola_istogramma(frame, bbox)
                 })
         return detections
 
@@ -85,8 +84,7 @@ class ObjectDetector:
                 if altro is det or altro["class_id"] != det["class_id"] or det["class_id"] == 0:
                     continue
                 stessa_base = abs(det["bbox"][3] - altro["bbox"][3]) < 0.1 * altezza
-                if stessa_base and area(det["bbox"]) < area(altro["bbox"]) and \
-                        copertura(det["bbox"], altro["bbox"]) > self.soglia_doppione:
+                if stessa_base and area(det["bbox"]) < area(altro["bbox"]) and copertura(det["bbox"], altro["bbox"]) > self.soglia_doppione:
                     det["doppia"] = True
         detections = [det for det in detections if not det["doppia"]]
 
@@ -159,8 +157,7 @@ class ObjectDetector:
             for id_altro in visibili:
                 altro = self.oggetti[id_altro]
                 stessa_base = abs(ogg["bbox"][3] - altro["bbox"][3]) < 0.1 * altezza
-                if altro["class_id"] == ogg["class_id"] and ogg["class_id"] != 0 and stessa_base and \
-                        copertura(ogg["bbox"], altro["bbox"]) > self.soglia_doppione:
+                if altro["class_id"] == ogg["class_id"] and ogg["class_id"] != 0 and stessa_base and copertura(ogg["bbox"], altro["bbox"]) > self.soglia_doppione:
                     doppione = True
             
             if doppione:
@@ -224,7 +221,7 @@ class ObjectDetector:
                 continue
 
             if hist is None or ogg["colore"] is None:
-                diff_colore = 0.5
+                diff_colore = self.max_diff_colore
             else:
                 diff_colore = cv2.compareHist(hist, ogg["colore"], cv2.HISTCMP_BHATTACHARYYA)
             
@@ -238,6 +235,23 @@ class ObjectDetector:
 
         return id_migliore
 
+    def conteggio(self):
+        contatore = {
+            0: 0,
+            1: 0,
+            2: 0,
+            3: 0,
+            5: 0,
+            7: 0,
+        }
+        for ogg in self.oggetti.values():
+            # class_id = ogg["class_id"]
+            # if class_id in contatore:
+            #     contatore[class_id] += 1
+            
+            contatore[ogg["class_id"]] += 1
+        return contatore
+
     def process_video_stream(self, video_path):
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
@@ -246,8 +260,15 @@ class ObjectDetector:
         np.random.seed(100)
         colors = np.random.randint(0, 255, size=(100, 3), dtype="uint8").tolist()
         
-        # Le classi richieste
-        target_classes = [0, 1, 2, 3, 5, 7]
+        target_classes = [0, 1, 2, 3, 5, 7] 
+        class_names = {
+            0: "Persone",
+            1: "Biciclette",
+            2: "Auto",
+            3: "Moto",
+            5: "Autobus",
+            7: "Camion"
+        }
 
         while cap.isOpened():
             ret, frame = cap.read()
@@ -273,8 +294,26 @@ class ObjectDetector:
 
                 cv2.putText(frame, label, (x1, max(y1 - 10, 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-            cv2.imshow("Detection & Tracking in tempo reale", frame)
+            # VISUALIZZAZIONE CONTATORE SULLO SCHERMO
+            contatore = self.conteggio()
+            
+            # Overlay semi-trasparente per il pannello del contatore
+            overlay = frame.copy()
+            cv2.rectangle(overlay, (10, 10), (220, 210), (0, 0, 0), -1)
+            cv2.addWeighted(overlay, 0.6, frame, 0.4, 0, frame)
 
+            # Titolo ed elementi del contatore
+            cv2.putText(frame, "CONTATORE", (20, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+            cv2.line(frame, (20, 42), (210, 42), (255, 255, 255), 1)
+
+            y_offset = 65
+            for cls_id, count in contatore.items():
+                nome_classe = class_names.get(cls_id, f"Classe {cls_id}")
+                cv2.putText(frame, f"{nome_classe}: {count}", (20, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+                y_offset += 24
+
+            cv2.imshow("Detection & Tracking in tempo reale", frame)
+            
             if cv2.waitKey(1) & 0xFF in [ord('q'), ord('Q'), 27]:
                 break
 
