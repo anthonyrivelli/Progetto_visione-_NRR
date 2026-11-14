@@ -38,13 +38,13 @@ class ObjectDetector:
         self.alias = {}     
         self.frame_idx = 0
 
-        self.max_frame_nascosto = 90 
+        self.max_frame_nascosto = int(2.0 * cap.get(cv2.CAP_PROP_FPS))   # 2 secondi
         self.min_hits = 5              
         self.soglia_parziale = 0.2     
         self.soglia_occluso = 0.3      
         self.max_distanza = 1.0        
         self.max_diff_colore = 0.5 # 0->identici, 1->diversi     
-        self.soglia_doppione = 0.7     
+        self.soglia_doppione = 0.7
 
     def detect(self, frame, target_classes=None):
         results = self.model.track(
@@ -60,6 +60,7 @@ class ObjectDetector:
         detections = []
         if results.boxes is not None and results.boxes.id is not None:
             track_ids = results.boxes.id.int().cpu().tolist()
+            #track_ids = results.boxes.xyxy.cpu().numpy()
             
             for box, track_id in zip(results.boxes, track_ids):
                 bbox = list(map(int, box.xyxy[0]))
@@ -124,6 +125,7 @@ class ObjectDetector:
                 id_ogg = id_vecchio
             else:
                 id_ogg = det["track_id"]
+                self.alias.pop(id_ogg, None)
                 self.nuovo_oggetto(id_ogg, det)
                 
             self.aggiorna_oggetto(id_ogg, det)
@@ -248,7 +250,8 @@ class ObjectDetector:
             # class_id = ogg["class_id"]
             # if class_id in contatore:
             #     contatore[class_id] += 1
-            
+            if ogg["stato"] == "non rilevato":
+                continue
             contatore[ogg["class_id"]] += 1
         return contatore
 
@@ -270,6 +273,10 @@ class ObjectDetector:
             7: "Camion"
         }
 
+        nome_finestra = "Detection & Tracking in tempo reale"
+        cv2.namedWindow(nome_finestra, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(nome_finestra, 1280, 720)
+
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
@@ -279,6 +286,9 @@ class ObjectDetector:
             self.gestisci_occlusioni(frame, detections)
 
             for id_ogg, ogg in self.oggetti.items():
+                # se non rilevato mantine in memoria la posizione predetta ma non mostra la box
+                if ogg["stato"] == "non rilevato":
+                    continue
                 x1, y1, x2, y2 = [int(v) for v in ogg["bbox"]]
                 class_id = ogg["class_id"]
                 color = tuple(colors[class_id % len(colors)])
@@ -312,7 +322,10 @@ class ObjectDetector:
                 cv2.putText(frame, f"{nome_classe}: {count}", (20, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
                 y_offset += 24
 
-            cv2.imshow("Detection & Tracking in tempo reale", frame)
+            #cv2.imshow("Detection & Tracking in tempo reale", frame)
+            #cv2.imshow("Detection & Tracking in tempo reale", cv2.resize(frame, (1280, 720)))
+            cv2.imshow(nome_finestra, frame)
+            
             
             if cv2.waitKey(1) & 0xFF in [ord('q'), ord('Q'), 27]:
                 break
@@ -322,4 +335,4 @@ class ObjectDetector:
 
 if __name__ == "__main__":
     detector = ObjectDetector(model_path="yolo26m.pt", conf_threshold=0.30)
-    detector.process_video_stream("video/video_traffico.mp4")
+    detector.process_video_stream("video/video_traffico_5.mp4")
