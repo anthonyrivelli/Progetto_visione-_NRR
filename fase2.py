@@ -38,7 +38,7 @@ class ObjectDetector:
         self.alias = {}     
         self.frame_idx = 0
 
-        self.max_frame_nascosto = int(2.0 * cap.get(cv2.CAP_PROP_FPS))   # 2 secondi
+        self.max_sec_nascosto = 2
         self.min_hits = 5              
         self.soglia_parziale = 0.2     
         self.soglia_occluso = 0.3      
@@ -281,6 +281,8 @@ class ObjectDetector:
             ret, frame = cap.read()
             if not ret:
                 break
+            
+            self.max_frame_nascosto = int(self.max_sec_nascosto * cap.get(cv2.CAP_PROP_FPS))
             
             detections = self.detect(frame, target_classes=target_classes)
             self.gestisci_occlusioni(frame, detections)
