@@ -1,3 +1,4 @@
+import time
 import cv2
 from ultralytics import YOLO
 import numpy as np
@@ -277,6 +278,9 @@ class ObjectDetector:
         cv2.namedWindow(nome_finestra, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(nome_finestra, 1280, 720)
 
+        frame_dall_ultimo_log = 0
+        t_ultimo_log = time.time()
+
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
@@ -328,6 +332,13 @@ class ObjectDetector:
             #cv2.imshow("Detection & Tracking in tempo reale", cv2.resize(frame, (1280, 720)))
             cv2.imshow(nome_finestra, frame)
             
+            # stampa degli FPS una volta al secondo
+            frame_dall_ultimo_log += 1
+            adesso = time.time()
+            if adesso - t_ultimo_log >= 1.0:
+                print(f"[LOG] FPS: {frame_dall_ultimo_log / (adesso - t_ultimo_log):.1f}")
+                frame_dall_ultimo_log = 0
+                t_ultimo_log = adesso
             
             if cv2.waitKey(1) & 0xFF in [ord('q'), ord('Q'), 27]:
                 break
@@ -336,5 +347,5 @@ class ObjectDetector:
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    detector = ObjectDetector(model_path="yolo26m.pt", conf_threshold=0.30)
-    detector.process_video_stream("video/video_traffico_5.mp4")
+    detector = ObjectDetector(model_path="modelli/yolo26m.pt", conf_threshold=0.30)
+    detector.process_video_stream("video/video_traffico.mp4")

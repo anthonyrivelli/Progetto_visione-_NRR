@@ -1,0 +1,9 @@
+link script da cui sono stati estratti i file di conversione dataset
+
+https://github.com/ultralytics/ultralytics/blob/main/ultralytics/data/converter.py
+
+link dataset:
+
+https://platform.ultralytics.com/7even/datasets/crosswalk-segv1iyolo26
+
+https://platform.ultralytics.com/nicholas-brown/datasets/day-detection-16v2iyolo26 (va estratta la classe strisce pedonali)

@@ -61,16 +61,14 @@ class ObjectDetector:
             print(detections) 
             print("\n")
             cv2.imshow("Detection in tempo reale", frame)
-            
-            
+        
             # Interrompe l'esecuzione premendo 'q'
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-               
+                break   
         cap.release()
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     # Inizializzazione della classe ed esecuzione su un video pre-registrato
-    detector = ObjectDetector(model_path="yolo26n.pt", conf_threshold=0.50)
+    detector = ObjectDetector(model_path="modelli/yolo26n.pt", conf_threshold=0.50)
     detector.process_video_stream("video/video_traffico.mp4")

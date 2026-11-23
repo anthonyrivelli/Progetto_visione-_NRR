@@ -5,8 +5,22 @@ coordinate della box: formato corner-based (xyxy) (esiste anche center-based(xyw
 * CAMBIARE LABEL COCO
 - colore per ogni classe riconosciuta [fatto]
 FASE 2: tracciamento temporale, prende gli oggetti rilevati e li collega nel tempo, inserimemto id persistente
--> utilizzato bytetrack
+-> utilizzato tracktrack
 - cambiare codice perchè è illegile [fatto]
+ 
+ -> YoloE modello zero schot, va ad effetuare una mappatura delle parole fornito al primi avvio per poi continuarle ad usarele
+
+ Nota inportante : attalmente la prima classe deve essere per forza person essendo che c'è un if che controlla che sia una persona 
+
 
 FASE 3: CONTEGGIO OGGETTI 
+-> viene effetuato un conteggio frame per frame
+
+FASE EXTRA
+
+-> Fine tuning partendo dal modello Yoloe-seg, sfrutta i sistemi di addestramenti di ultralytics, e sfrutta la segmentazione, ci sono diversi trainer e va ad effetuare la validazione ad ogni epoca, ma si puo effetuare anche alla fine.
+in memoria si salva il modello migliore che trova durente il train e anche l'ultimo 
+
+-> estrazione del dataset di Yolo, ci sono diverse modalita estratte dallo script ufficiale(link presente) 
+
 
